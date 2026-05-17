@@ -1,4 +1,4 @@
--- By Volca --
+-- By Volca -- 
 local success, Rayfield = pcall(function()
     return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 end)
@@ -110,11 +110,29 @@ local function ultraFastTP()
     end)
 end
 
--- 4. DYNAMIC ESP
+-- 4. DYNAMIC ESP (METHOD YANG WORK BUAT HIDE AND SEEK EXTREME)
 local function isPlayerIT(p)
-    if p:GetAttribute("IsSeeker") then return true end
-    if p.Team and (p.Team.Name == "Seeker" or p.Team.Name == "IT" or p.Team.Name == "Hunter") then return true end
-    if p.Character and p.Character:FindFirstChild("IsIT") then return true end
+    if not p.Character then return false end
+    
+    -- Method 1: Cek leaderstats (Paling umum dipake game Roblox H&S)
+    local leaderstats = p:FindFirstChild("leaderstats")
+    if leaderstats then
+        local role = leaderstats:FindFirstChild("Role") or leaderstats:FindFirstChild("Team") or leaderstats:FindFirstChild("Status")
+        if role and (role.Value == "Seeker" or role.Value == "IT" or role.Value == "Hunter") then
+            return true
+        end
+    end
+    
+    -- Method 2: Cek String/Bool Value di Character (Sering dipake script lama)
+    local seekerTag = p.Character:FindFirstChild("IsSeeker") or p.Character:FindFirstChild("Seeker")
+    if seekerTag then 
+        if seekerTag:IsA("BoolValue") and seekerTag.Value then return true end
+        if seekerTag:IsA("StringValue") and seekerTag.Value ~= "" then return true end
+    end
+
+    -- Method 3: Cek Atribut
+    if p:GetAttribute("IsSeeker") or p.Character:GetAttribute("IsSeeker") then return true end
+
     return false
 end
 
@@ -128,10 +146,10 @@ local function updateESP()
             local shouldShowESP = false
             
             if localIsIT then
-                shouldShowESP = true
+                shouldShowESP = true -- IT liat semua hider
             else
                 if targetIsIT then
-                    shouldShowESP = true
+                    shouldShowESP = true -- Hider cuma liat IT
                 end
             end
             
@@ -146,10 +164,10 @@ local function updateESP()
                 end
                 
                 if targetIsIT then
-                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Merah buat IT
                     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                 else
-                    highlight.FillColor = Color3.fromRGB(0, 255, 0)
+                    highlight.FillColor = Color3.fromRGB(0, 255, 0) -- Ijo buat Hider
                     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                 end
                 highlight.FillTransparency = 0.5
@@ -169,6 +187,15 @@ local Window = Rayfield:CreateWindow({
    LoadingTitle = "Restoring All Features...",
    ConfigurationSaving = {Enabled = false}
 })
+
+-- FIX KAMERA IKUT GESESER: Bikin Window UI jadi Active
+local rayfieldMain = game.CoreGui:FindFirstChild("Rayfield")
+if rayfieldMain then
+   local mainUI = rayfieldMain:FindFirstChild("Main")
+   if mainUI then
+       mainUI.Active = true -- Ini nge-block input kamera pas nge-drag UI
+   end
+end
 
 local Tab = Window:CreateTab("Main Menu", 4483362587)
 
@@ -200,7 +227,6 @@ Tab:CreateToggle({
    Callback = function(v) toggleInvisibility(v) end,
 })
 
--- FITUR SPEED KEMBALI!
 Tab:CreateToggle({
    Name = "Speed",
    CurrentValue = false,
@@ -229,7 +255,7 @@ Tab:CreateToggle({
 
 -- === HANDLERS ===
 runService.Heartbeat:Connect(function()
-    -- Speed Logic (JAN DI ILANGIN LAGI)
+    -- Speed Logic
     if speed_enabled and player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = speed_val
     end
@@ -253,7 +279,7 @@ runService.Heartbeat:Connect(function()
         end
     end
 
-    -- ESP Logic
+    -- ESP Logic Update
     if esp_enabled then
         updateESP()
     end
